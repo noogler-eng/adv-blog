@@ -1,0 +1,21 @@
+name = "my-blog"
+compatibility_date = "2023-12-01"
+
+[vars]
+DATABASE_URL = "prisma://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlfa2V5IjoiNDk2NGJiYzAtMDU1MC00ZGFhLWJiN2MtY2M0MGQ1NGM2MzJkIiwidGVuYW50X2lkIjoiMGQyM2QyOTQxODcxMmY5ODA5ODJiMmNhODMzMzljOTQ3ODI5YjhmNzY3MTY3ZGI2NDVlMWM1YzY4ODcxOTVlNyIsImludGVybmFsX3NlY3JldCI6ImVhYzJiNjFlLWIwODEtNGFhYS1iNWY5LTZhYWYxMTI2ZTQzYyJ9.lj7a_tbEubGodvJDEo0KAB9_VDd2awfF7RJNcpdNkXM"
+
+# [[kv_namespaces]]
+# binding = "MY_KV_NAMESPACE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# [[r2_buckets]]
+# binding = "MY_BUCKET"
+# bucket_name = "my-bucket"
+
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "my-database"
+# database_id = ""
+
+# [ai]
+# binding = "AI"
