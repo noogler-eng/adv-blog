@@ -2,12 +2,10 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { verify } from 'hono/jwt'
-import supabase from '../../supabase'
 import { z } from "zod";
 
 const inputBlogBody = z.object({
     title: z.string(), 
-    image: z.string(),
     content: z.string(),
 })
 
@@ -88,11 +86,9 @@ blogRouter.post("/v1/blog", async(c)=>{
 
     try{
 
-        const { data, error } = await supabase.storage.from('posts').upload("post.png", isSuccess.data.image);
         const blog = await prisma.post.create({
             data: {
                 title: isSuccess.data.title, 
-                image: data?.fullPath || "",
                 content: isSuccess.data.content,
                 authorId: c.get("user_id")
             }
@@ -113,7 +109,6 @@ blogRouter.post("/v1/blog", async(c)=>{
 
 
 blogRouter.get('/v1/blog:id', async(c)=>{
-    const body = c.req.json();
     const id = Number(c.req.param("id"));
     
     const prisma = new PrismaClient({
@@ -165,7 +160,6 @@ blogRouter.put('/v1/blog:id', async(c)=>{
     }
 
     try{
-        const { data, error } = await supabase.storage.from('posts').upload("post.png", isSuccess.data.image);
         const blog = await prisma.post.update({
             where: {
                 id: id
@@ -173,7 +167,6 @@ blogRouter.put('/v1/blog:id', async(c)=>{
             data: {
                 title: isSuccess.data.title,
                 content: isSuccess.data.content,
-                image: data?.fullPath || "",
             }
         })
 

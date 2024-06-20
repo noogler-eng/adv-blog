@@ -2,14 +2,13 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { decode, sign, verify } from 'hono/jwt'
-import supabase from '../../supabase'
 import { hashSync } from "bcrypt-ts"
 import { z } from "zod";
 
 export const userRouter = new Hono<{
     Bindings: {
-        DATABASE_URL: string,
-        SECRET_KEY: string,
+        DATABASE_URL: string;
+        SECRET_KEY: string;
     }
 }>()
 
@@ -17,7 +16,6 @@ const signUpInput = z.object({
     username: z.string(),
     email: z.string().email(),
     password: z.string().length(6),
-    image: z.string()
 })
 
 const signInInput = z.object({
@@ -28,7 +26,8 @@ const signInInput = z.object({
 
 userRouter.post('/signup', async(c)=>{
     
-    const body = c.req.json();
+    const body = await c.req.json();
+    console.log(body);
     const isSuccess = signUpInput.safeParse(body);
 
     // 1. prisma direct acts with accelrated url
@@ -36,6 +35,7 @@ userRouter.post('/signup', async(c)=>{
         datasourceUrl: c.env.DATABASE_URL
     }).$extends(withAccelerate())
 
+    console.log(isSuccess);
     if(!isSuccess.success){
         c.status(411)
         return c.json({
@@ -58,18 +58,17 @@ userRouter.post('/signup', async(c)=>{
         }
 
         // const image = await c.env.MY_BUCKET.put("profile", isSuccess.data.image);
-        const { data, error } = await supabase.storage.from('avatars').upload("user.png", isSuccess.data.image);
         const hashedPassword = await hashSync(isSuccess.data.password, 8);
         const new_user = await prisma.user.create({
             data: {
                 username: isSuccess.data.username,
                 email: isSuccess.data.email,
-                password: hashedPassword,
-                image: data?.fullPath || "https://i.sstatic.net/frlIf.png"
+                password: hashedPassword
             }
         })
 
         const id = new_user.id;
+        console.log(c.env.SECRET_KEY);
         const token = await sign({
             id: id,
             exp: Math.floor(Date.now() / 1000) + 60 * 60
@@ -81,6 +80,7 @@ userRouter.post('/signup', async(c)=>{
         })
 
     }catch(error){
+        console.log(error);
         c.status(500);
         return c.json({
             msg: "error in server side"
@@ -91,7 +91,7 @@ userRouter.post('/signup', async(c)=>{
 
 userRouter.post('/signin', async(c)=>{
     
-    const body = c.req.json();
+    const body = await c.req.json();
     const isSuccess = signInInput.safeParse(body);
 
     const prisma = new PrismaClient({
@@ -117,7 +117,7 @@ userRouter.post('/signin', async(c)=>{
         if(!user){
             c.status(411)
             return c.json({
-                msg: "email already not exists"
+                msg: "email not exists"
             })
         }
 
@@ -128,7 +128,7 @@ userRouter.post('/signin', async(c)=>{
         }, c.env.SECRET_KEY);
 
         return c.json({
-            msg: "user logged in susscessfully",
+            msg: "user signed in susscessfully",
             token: token
         })
 
