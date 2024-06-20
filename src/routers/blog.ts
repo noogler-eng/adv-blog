@@ -21,8 +21,11 @@ export const blogRouter = new Hono<{
 
 // middleware return user id ans setting it up to the hono Varibales
 blogRouter.use('/v1/*', async(c, next)=>{
-  const added_token = c.req.header("authorization") || "";
-  const token: string = added_token.split(" ")[1];
+  const added_token = await c.req.header("Authorization");
+  console.log(added_token);
+  console.log("working");
+  const token: string = added_token?.split(" ")[1] || "";
+  console.log(token);
   const isSuccess = await verify(token, c.env.SECRET_KEY) 
 
   try{
@@ -61,6 +64,7 @@ blogRouter.get('/v1/user', async(c) => {
     })
 
   }catch(error){
+    console.log(error);
     c.status(500);
     return c.json({
         message: "error in sever side"
@@ -70,7 +74,7 @@ blogRouter.get('/v1/user', async(c) => {
 
 // creating an blog
 blogRouter.post("/v1/blog", async(c)=>{
-    const body = c.req.json();
+    const body = await c.req.json();
     const isSuccess = inputBlogBody.safeParse(body);
 
     if(!isSuccess.success){
@@ -255,10 +259,22 @@ blogRouter.get("/getAll", async(c)=>{
     }).$extends(withAccelerate())
     
     try{
-        const blogs = await prisma.post.findMany({})
+        const blogs = await prisma.post.findMany({
+            select: {
+                id: true,
+                title: true,
+                content: true,
+                author: {
+                    select: {
+                        username: true,
+                        email: true
+                    }
+                }
+            }
+        })
         console.log(blogs)
 
-        if(blogs.length > 0){
+        if(blogs.length >= 0){
             return c.json({
                 msg: blogs
             })

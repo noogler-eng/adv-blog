@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { PrismaClient } from '@prisma/client/edge'
 import { withAccelerate } from '@prisma/extension-accelerate'
 import { decode, sign, verify } from 'hono/jwt'
-import { hashSync } from "bcrypt-ts"
+import { hashSync, compare } from "bcrypt-ts"
 import { z } from "zod";
 
 export const userRouter = new Hono<{
@@ -92,6 +92,7 @@ userRouter.post('/signup', async(c)=>{
 userRouter.post('/signin', async(c)=>{
     
     const body = await c.req.json();
+    console.log(body);
     const isSuccess = signInInput.safeParse(body);
 
     const prisma = new PrismaClient({
@@ -106,11 +107,9 @@ userRouter.post('/signin', async(c)=>{
     }
 
     try{
-        const hashedPassword = await hashSync(isSuccess.data.password, 8);
         const user = await prisma.user.findUnique({
             where: {
                 email: isSuccess.data.email,
-                password: hashedPassword
             }
         })
 
@@ -119,6 +118,16 @@ userRouter.post('/signin', async(c)=>{
             return c.json({
                 msg: "email not exists"
             })
+        }
+
+        const hashedPassword = await compare(isSuccess.data.password, user?.password);
+        if(!hashedPassword){
+            if(!user){
+                c.status(411)
+                return c.json({
+                    msg: "Invlaid Password"
+                })
+            }
         }
 
         const id = user.id;
