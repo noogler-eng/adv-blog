@@ -112,8 +112,9 @@ blogRouter.post("/v1/blog", async(c)=>{
 })
 
 
-blogRouter.get('/v1/blog:id', async(c)=>{
+blogRouter.get('/v1/blog/:id', async(c)=>{
     const id = Number(c.req.param("id"));
+    console.log(id);
     
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL
@@ -124,6 +125,16 @@ blogRouter.get('/v1/blog:id', async(c)=>{
         const blog = await prisma.post.findUnique({
             where: {
                 id: id
+            },
+            select: {
+                title: true,
+                content: true,
+                author: {
+                    select: {
+                        username: true,
+                        email: true
+                    }
+                }
             }
         })
 
@@ -147,8 +158,8 @@ blogRouter.get('/v1/blog:id', async(c)=>{
 
 
 // updating post
-blogRouter.put('/v1/blog:id', async(c)=>{
-    const body = c.req.json();
+blogRouter.put('/v1/blog/:id', async(c)=>{
+    const body = await c.req.json();
     const id = Number(c.req.param('id'));
     const isSuccess = inputBlogBody.safeParse(body);
 
@@ -187,9 +198,8 @@ blogRouter.put('/v1/blog:id', async(c)=>{
 
 
 // delete the blog
-blogRouter.delete('/v1/blog:id', async(c)=>{
-    const body = c.req.json();
-    const id = Number(c.req.param("id"));
+blogRouter.delete('/v1/blog/:id', async(c)=>{
+    const id = Number(await c.req.param("id"));
     
     const prisma = new PrismaClient({
         datasourceUrl: c.env.DATABASE_URL
@@ -203,7 +213,6 @@ blogRouter.delete('/v1/blog:id', async(c)=>{
             }
         })
 
-        c.status(411);
         return c.json({
             message: "blog deleted"
         })
